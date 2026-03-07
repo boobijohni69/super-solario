@@ -260,6 +260,7 @@ footer{
     <li><a href="#tokenomics">Tokenomics</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#game-section">Play</a></li>
+    <li><a href="#leaderboard">Leaderboard</a></li>
     <li><a href="#ai-generator">Image Creator</a></li>
   </ul>
   <button class="nav-cta" onclick="document.getElementById('game-section').scrollIntoView({behavior:'smooth'})">BUY $SOLARIO</button>
@@ -376,6 +377,267 @@ footer{
 
 <!-- GAME -->
 
+<!-- LEADERBOARD -->
+<section id="game-section">
+  <div class="section-label">MINI GAME</div>
+  <h2 class="section-title" style="font-family:'Bangers',cursive;font-size:clamp(2.5rem,6vw,4rem);color:var(--yellow);">SOLARIO COIN RUSH</h2>
+  <p class="game-intro">Help Solario collect coins and stomp bears (goombas) across 10 worlds. The more coins you collect, the more you deserve $SOLARIO!</p>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="700" height="380"></canvas>
+    <div id="game-ui">
+      <span class="ui-stat">⭐ <span id="scoreDisplay">0</span></span>
+      <span class="ui-stat">🪙 <span id="coinDisplay">0</span></span>
+      <span class="ui-stat">❤️ <span id="livesDisplay">3</span></span>
+      <span id="level-display">LEVEL 1</span>
+      <span class="ui-stat">⏱ <span id="timeDisplay">60</span></span>
+    </div>
+    <div id="game-overlay">
+      <h2 id="overlay-title">$SOLARIO<br>COIN RUSH</h2>
+      <p id="overlay-msg">← → MOVE &nbsp;|&nbsp; SPACE / ↑ JUMP<br>Collect coins! Stomp goombas!<br>Reach the goal coin to advance!</p>
+      <!-- X handle submission (shown after game ends) -->
+      <div id="score-submit" style="display:none;width:100%;margin-bottom:12px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:0.45rem;color:#8b7ab0;margin-bottom:8px;">SAVE YOUR SCORE TO THE LEADERBOARD:</div>
+        <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
+          <span style="color:#c084fc;font-size:0.9rem;font-weight:bold;">@</span>
+          <input id="x-handle-input" type="text" placeholder="your X handle" maxlength="30"
+            style="background:rgba(0,0,0,0.5);border:2px solid rgba(107,33,214,0.6);border-radius:8px;color:#fff;padding:8px 12px;font-size:0.85rem;font-family:inherit;outline:none;width:160px;"
+            onfocus="this.style.borderColor='#f5c518'" onblur="this.style.borderColor='rgba(107,33,214,0.6)'"
+            onkeydown="if(event.key==='Enter') submitScore()" />
+          <button onclick="submitScore()" style="background:linear-gradient(135deg,#6b21d6,#f5c518);border:none;color:#1a0040;font-family:'Press Start 2P',monospace;font-size:0.45rem;padding:9px 14px;border-radius:8px;cursor:pointer;">SUBMIT</button>
+        </div>
+        <div id="submit-msg" style="font-size:0.72rem;color:#f5c518;margin-top:8px;min-height:16px;"></div>
+      </div>
+      <button id="start-btn" onclick="startGame()">▶ START GAME</button>
+    </div>
+    <div id="level-banner">
+      <h2 id="banner-title">LEVEL 1</h2>
+      <p id="banner-sub">GET READY!</p>
+    </div>
+  </div>
+  <div id="mobile-controls">
+    <button class="ctrl-btn" ontouchstart="keys.left=true" ontouchend="keys.left=false">◀</button>
+    <button class="ctrl-btn" ontouchstart="doJump()" ontouchend="">▲</button>
+    <button class="ctrl-btn" ontouchstart="keys.right=true" ontouchend="keys.right=false">▶</button>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+
+<section id="leaderboard" style="padding:80px 20px;background:linear-gradient(180deg,#0a001e 0%,#0d0025 100%);text-align:center;">
+  <div class="section-label" style="text-align:center">HALL OF FAME</div>
+  <h2 class="section-title" style="font-family:'Bangers',cursive;font-size:clamp(2.5rem,6vw,4.5rem);color:var(--yellow);text-align:center;">LEADERBOARD</h2>
+  <p style="color:#b89fd4;font-size:0.9rem;margin-bottom:36px;">Top $SOLARIO players. Play the game and submit your score to claim your spot!</p>
+
+  <div style="max-width:680px;margin:0 auto;">
+    <!-- Top 3 podium -->
+    <div id="lb-podium" style="display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-bottom:32px;min-height:140px;"></div>
+
+    <!-- Full table -->
+    <div style="background:rgba(107,33,214,0.1);border:2px solid rgba(107,33,214,0.3);border-radius:16px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:48px 1fr 100px 80px;background:rgba(107,33,214,0.3);padding:12px 20px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#8b7ab0;">#</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#8b7ab0;">PLAYER</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#8b7ab0;text-align:right;">SCORE</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:0.42rem;color:#8b7ab0;text-align:right;">COINS</div>
+      </div>
+      <div id="lb-rows" style="min-height:120px;display:flex;align-items:center;justify-content:center;">
+        <div style="color:#4a3a6a;font-family:'Press Start 2P',monospace;font-size:0.45rem;padding:30px;">LOADING...</div>
+      </div>
+    </div>
+
+    <p style="color:#4a3a6a;font-size:0.7rem;margin-top:16px;">Scores are shared across all players. Submit your X handle after each game to appear here!</p>
+  </div>
+</section>
+
+<script>
+// ── LEADERBOARD STORAGE ──────────────────────────────────────────────────────
+const LB_KEY = 'solario-leaderboard-v1';
+
+async function lbLoad() {
+  try {
+    const res = await window.storage.get(LB_KEY, true); // shared=true
+    return res ? JSON.parse(res.value) : [];
+  } catch(e) { return []; }
+}
+
+async function lbSave(entries) {
+  try {
+    await window.storage.set(LB_KEY, JSON.stringify(entries), true);
+  } catch(e) {}
+}
+
+async function submitScore() {
+  const raw = document.getElementById('x-handle-input').value.trim().replace(/^@/, '');
+  const msg = document.getElementById('submit-msg');
+  if (!raw) { msg.textContent = '⚠️ Enter your X handle first!'; return; }
+  if (!/^[A-Za-z0-9_]{1,30}$/.test(raw)) { msg.textContent = '⚠️ Invalid handle (letters, numbers, _ only)'; return; }
+
+  const pending = window._pendingScore;
+  if (!pending) { msg.textContent = '⚠️ No score to submit!'; return; }
+
+  msg.textContent = '⏳ Saving...';
+
+  try {
+    const entries = await lbLoad();
+    const existing = entries.findIndex(e => e.handle.toLowerCase() === raw.toLowerCase());
+    const entry = { handle: raw, score: pending.score, coins: pending.coins, level: pending.level, ts: Date.now() };
+
+    if (existing >= 0) {
+      // Only update if better score
+      if (pending.score > entries[existing].score) {
+        entries[existing] = entry;
+        msg.textContent = '🏆 New personal best saved!';
+      } else {
+        msg.textContent = '✅ Score already on board (not a new best).';
+      }
+    } else {
+      entries.push(entry);
+      msg.textContent = '✅ Score submitted! Check the leaderboard.';
+    }
+
+    // Keep top 50
+    entries.sort((a,b) => b.score - a.score);
+    entries.splice(50);
+    await lbSave(entries);
+    window._pendingScore = null;
+    document.getElementById('x-handle-input').value = '';
+    renderLeaderboard();
+  } catch(e) {
+    msg.textContent = '❌ Save failed. Try again.';
+  }
+}
+
+async function renderLeaderboard() {
+  const entries = await lbLoad();
+  const podium = document.getElementById('lb-podium');
+  const rows   = document.getElementById('lb-rows');
+  const medals = ['🥇','🥈','🥉'];
+
+  // Clear
+  podium.innerHTML = '';
+  rows.innerHTML   = '';
+
+  if (entries.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'color:#4a3a6a;font-family:monospace;font-size:0.8rem;padding:30px;';
+    empty.textContent = 'NO SCORES YET — BE THE FIRST!';
+    rows.appendChild(empty);
+    return;
+  }
+
+  // ── Podium (top 3) ──────────────────────────────────────────────
+  const top3   = entries.slice(0, 3);
+  const heights = ['110px','85px','70px'];
+  const order   = top3.length >= 2 ? [1,0,2] : [0];
+
+  order.filter(function(i){ return top3[i]; }).forEach(function(i) {
+    const e   = top3[i];
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;';
+
+    const medal = document.createElement('div');
+    medal.style.fontSize = '1.6rem';
+    medal.textContent = medals[i];
+
+    const handle = document.createElement('div');
+    handle.style.cssText = 'font-family:monospace;font-size:0.8rem;font-weight:bold;color:#f5c518;';
+    handle.textContent = '@' + e.handle;
+
+    const sc = document.createElement('div');
+    sc.style.cssText = 'font-size:0.75rem;color:#c084fc;';
+    sc.textContent = e.score.toLocaleString();
+
+    const block = document.createElement('div');
+    block.style.cssText = 'width:70px;background:rgba(107,33,214,0.4);border:2px solid rgba(107,33,214,0.6);border-radius:8px 8px 0 0;height:' + heights[i] + ';display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:1rem;font-weight:bold;color:#f5c518;';
+    block.textContent = i + 1;
+
+    col.appendChild(medal);
+    col.appendChild(handle);
+    col.appendChild(sc);
+    col.appendChild(block);
+    podium.appendChild(col);
+  });
+
+  // ── Rows ────────────────────────────────────────────────────────
+  const rowBgs   = ['rgba(245,197,24,0.08)','rgba(180,180,200,0.06)','rgba(180,120,50,0.06)'];
+  const rankCols = ['#f5c518','#c0c0c0','#cd7f32'];
+
+  entries.forEach(function(e, i) {
+    const bg = rowBgs[i] || 'transparent';
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:48px 1fr 100px 80px;padding:11px 20px;border-bottom:1px solid rgba(107,33,214,0.15);background:' + bg + ';transition:background 0.2s;cursor:default;';
+    row.addEventListener('mouseover',  function(){ row.style.background = 'rgba(107,33,214,0.15)'; });
+    row.addEventListener('mouseout',   function(){ row.style.background = bg; });
+
+    // Rank
+    const rankEl = document.createElement('div');
+    rankEl.style.cssText = 'font-family:monospace;font-size:0.8rem;color:' + (i < 3 ? rankCols[i] : '#4a3a6a') + ';';
+    rankEl.textContent = i < 3 ? medals[i] : (i + 1);
+
+    // Player
+    const playerEl = document.createElement('div');
+    playerEl.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    const link = document.createElement('a');
+    link.href = 'https://x.com/' + e.handle;
+    link.target = '_blank';
+    link.style.cssText = 'color:#d4b8ff;text-decoration:none;font-size:0.85rem;font-weight:bold;';
+    link.textContent = '@' + e.handle;
+    link.addEventListener('mouseover', function(){ link.style.color='#f5c518'; });
+    link.addEventListener('mouseout',  function(){ link.style.color='#d4b8ff'; });
+    const badge = document.createElement('span');
+    badge.style.cssText = 'font-size:0.72rem;color:#4a3a6a;';
+    badge.textContent = e.level >= 10 ? '🏆' : 'Lv' + e.level;
+    playerEl.appendChild(link);
+    playerEl.appendChild(badge);
+
+    // Score
+    const scoreEl = document.createElement('div');
+    scoreEl.style.cssText = 'font-family:monospace;font-size:0.8rem;color:#f5c518;text-align:right;';
+    scoreEl.textContent = e.score.toLocaleString();
+
+    // Coins
+    const coinsEl = document.createElement('div');
+    coinsEl.style.cssText = 'font-family:monospace;font-size:0.8rem;color:#c084fc;text-align:right;';
+    coinsEl.textContent = '🪙' + e.coins;
+
+    row.appendChild(rankEl);
+    row.appendChild(playerEl);
+    row.appendChild(scoreEl);
+    row.appendChild(coinsEl);
+    rows.appendChild(row);
+  });
+}
+
+// Load on page ready
+document.addEventListener('DOMContentLoaded', renderLeaderboard);
+// Also try after a short delay in case storage loads slowly
+setTimeout(renderLeaderboard, 1000);
+</script>
+
+<section id="community">
+  <div class="section-label" style="text-align:center">JOIN THE KINGDOM</div>
+  <h2 class="section-title" style="font-family:'Bangers',cursive;font-size:clamp(2.5rem,6vw,4.5rem);color:var(--yellow);text-align:center;">COMMUNITY</h2>
+  <div class="social-grid">
+    <a href="https://x.com/SuperSolario" target="_blank" class="social-card">
+      <div class="social-icon">🐦</div>
+      <div class="social-name">TWITTER / X</div>
+      <div class="social-desc">Follow for updates & memes</div>
+    </a>
+    <a href="https://t.me/supersolario" target="_blank" class="social-card">
+      <div class="social-icon">✈️</div>
+      <div class="social-name">TELEGRAM</div>
+      <div class="social-desc">Join the community chat</div>
+    </a>
+    <a href="#" class="social-card">
+      <div class="social-icon">🚀</div>
+      <div class="social-name">PUMP.FUN</div>
+      <div class="social-desc">Buy $SOLARIO now</div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
 <!-- IMAGE CREATOR -->
 <section id="ai-generator" style="padding:80px 20px;background:linear-gradient(180deg,#0d0025 0%,#1a0040 100%);text-align:center;">
   <div class="section-label" style="text-align:center">POWERED BY AI</div>
@@ -549,60 +811,6 @@ function downloadImage() {
 }
 </script>
 
-<section id="game-section">
-  <div class="section-label">MINI GAME</div>
-  <h2 class="section-title" style="font-family:'Bangers',cursive;font-size:clamp(2.5rem,6vw,4rem);color:var(--yellow);">SOLARIO COIN RUSH</h2>
-  <p class="game-intro">Help Solario collect coins and stomp bears (goombas) across 10 worlds. The more coins you collect, the more you deserve $SOLARIO!</p>
-  <div id="game-container">
-    <canvas id="gameCanvas" width="700" height="380"></canvas>
-    <div id="game-ui">
-      <span class="ui-stat">⭐ <span id="scoreDisplay">0</span></span>
-      <span class="ui-stat">🪙 <span id="coinDisplay">0</span></span>
-      <span class="ui-stat">❤️ <span id="livesDisplay">3</span></span>
-      <span id="level-display">LEVEL 1</span>
-      <span class="ui-stat">⏱ <span id="timeDisplay">60</span></span>
-    </div>
-    <div id="game-overlay">
-      <h2>$SOLARIO<br>COIN RUSH</h2>
-      <p>← → MOVE &nbsp;|&nbsp; SPACE / ↑ JUMP<br>Collect coins! Stomp goombas!<br>Reach the flag to advance!</p>
-      <button id="start-btn" onclick="startGame()">▶ START GAME</button>
-    </div>
-    <div id="level-banner">
-      <h2 id="banner-title">LEVEL 1</h2>
-      <p id="banner-sub">GET READY!</p>
-    </div>
-  </div>
-  <div id="mobile-controls">
-    <button class="ctrl-btn" ontouchstart="keys.left=true" ontouchend="keys.left=false">◀</button>
-    <button class="ctrl-btn" ontouchstart="doJump()" ontouchend="">▲</button>
-    <button class="ctrl-btn" ontouchstart="keys.right=true" ontouchend="keys.right=false">▶</button>
-  </div>
-</section>
-
-<!-- COMMUNITY -->
-<section id="community">
-  <div class="section-label" style="text-align:center">JOIN THE KINGDOM</div>
-  <h2 class="section-title" style="font-family:'Bangers',cursive;font-size:clamp(2.5rem,6vw,4.5rem);color:var(--yellow);text-align:center;">COMMUNITY</h2>
-  <div class="social-grid">
-    <a href="https://x.com/SuperSolario" target="_blank" class="social-card">
-      <div class="social-icon">🐦</div>
-      <div class="social-name">TWITTER / X</div>
-      <div class="social-desc">Follow for updates & memes</div>
-    </a>
-    <a href="https://t.me/supersolario" target="_blank" class="social-card">
-      <div class="social-icon">✈️</div>
-      <div class="social-name">TELEGRAM</div>
-      <div class="social-desc">Join the community chat</div>
-    </a>
-    <a href="#" class="social-card">
-      <div class="social-icon">🚀</div>
-      <div class="social-name">PUMP.FUN</div>
-      <div class="social-desc">Buy $SOLARIO now</div>
-    </a>
-  </div>
-</section>
-
-<!-- FOOTER -->
 <footer>
   <div class="footer-logo">$SOLARIO</div>
   <div class="footer-sub">THE PURPLE PLUMBER COIN &nbsp;•&nbsp; BUILT ON SOLANA &nbsp;•&nbsp; LAUNCHED ON PUMP.FUN</div>
@@ -792,6 +1000,8 @@ function generateLevel(lvl){
 
 function startGame(){
   document.getElementById('game-overlay').style.display='none';
+  document.getElementById('score-submit').style.display='none';
+  document.getElementById('submit-msg').textContent='';
   currentLevel=1; score=0; coins=0; lives=3;
   loadLevel(1);
 }
@@ -839,10 +1049,14 @@ function updateUI(){
 function triggerGameOver(){
   gameOver=true; gameRunning=false; clearInterval(timerInterval);
   const o=document.getElementById('game-overlay'); o.style.display='flex';
-  o.querySelector('h2').textContent='💀 GAME OVER';
-  o.querySelector('p').innerHTML=`LEVEL ${currentLevel} | SCORE: ${score}<br>COINS: ${coins}<br><br>Press to try again!`;
+  document.getElementById('overlay-title').textContent='💀 GAME OVER';
+  document.getElementById('overlay-msg').innerHTML=`LEVEL ${currentLevel} | SCORE: ${score}<br>COINS: ${coins}`;
+  document.getElementById('score-submit').style.display='block';
+  document.getElementById('submit-msg').textContent='';
+  document.getElementById('x-handle-input').value='';
   document.getElementById('start-btn').textContent='TRY AGAIN';
   document.getElementById('start-btn').onclick=startGame;
+  window._pendingScore={score,coins,level:currentLevel};
 }
 
 function triggerLevelWin(){
@@ -855,10 +1069,14 @@ function triggerLevelWin(){
     if(currentLevel>=10){
       fadeDir=0; fadeOverlay=0;
       const o=document.getElementById('game-overlay'); o.style.display='flex';
-      o.querySelector('h2').textContent='🏆 CHAMPION!';
-      o.querySelector('p').innerHTML=`ALL 10 WORLDS CLEARED!<br>SCORE: ${score} | COINS: ${coins}<br><br>TRUE $SOLARIO HOLDER!`;
+      document.getElementById('overlay-title').textContent='🏆 CHAMPION!';
+      document.getElementById('overlay-msg').innerHTML=`ALL 10 WORLDS CLEARED!<br>SCORE: ${score} | COINS: ${coins}<br>TRUE $SOLARIO HOLDER!`;
+      document.getElementById('score-submit').style.display='block';
+      document.getElementById('submit-msg').textContent='';
+      document.getElementById('x-handle-input').value='';
       document.getElementById('start-btn').textContent='PLAY AGAIN';
       document.getElementById('start-btn').onclick=startGame;
+      window._pendingScore={score,coins,level:currentLevel};
     } else {
       currentLevel++;
       loadLevel(currentLevel);
